@@ -21,8 +21,8 @@ class MyApp extends StatelessWidget {
           primaryVariant: Color(0xFF3700B3),
           secondary: Color(0xFFB71C1C),
           secondaryVariant: Colors.red,
-          background: Colors.blueGrey,
-          surface: Color(0xFFFFFFFF),
+          background: Colors.white70,
+          surface: Colors.white60,
           error: Color(0xFFB00020),
           onPrimary: Color(0xFFFFFFFF),
           onSecondary: Colors.white,
@@ -36,30 +36,32 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
   MainPage({this.title});
-  final String title;
-  final TextStyle style = TextStyle(fontSize: 24.0);
 
-  Widget _buildEmptyCard(BuildContext context, Color color, Widget child) {
-    return SizedBox(
-      height: 50.0,
-      width: MediaQuery.of(context).size.width,
-      child: Card(
-        color: color,
-        child: child,
-      ),
-    );
-  }
+  final String title;
+
+  @override
+  createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  final TextStyle style = TextStyle(fontSize: 24.0);
 
   @override
   Widget build(BuildContext context) {
-    final _kitchen = Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: <Widget>[
-        _buildEmptyCard(context, Theme.of(context).colorScheme.surface, Text("Hello")),
-        _buildEmptyCard(context, Theme.of(context).colorScheme.surface, Text("Goodbye")),
-      ],
+    final _kitchen = Container(
+      color: Theme.of(context).colorScheme.background,
+      child: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              new KitchenCard(name: "Oven", status: "Connected", temp: 700),
+            ],
+          )
+        )
+      )
     );
 
     final _lights = Column(
@@ -83,6 +85,7 @@ class MainPage extends StatelessWidget {
     );
 
     final _settings = Icon(Icons.settings);
+
     return DefaultTabController(
       length: 4,
       child: Scaffold(
@@ -98,15 +101,62 @@ class MainPage extends StatelessWidget {
           ),
           title: Text('MEA'),
         ),
-        body: TabBarView(
-          children: [
-            _kitchen,
-            _lights,
-            _doors,
-            _settings,
-          ]
+        body: Container(
+          color: Theme.of(context).colorScheme.background,
+          padding: EdgeInsets.all(36.0),
+          child: TabBarView(
+            children: [
+              _kitchen,
+              _lights,
+              _doors,
+              _settings,
+            ]
+          ),
         ),
     )
+    );
+  }
+}
+
+class KitchenCard extends StatelessWidget {
+  KitchenCard({this.name, this.status, this.temp});
+  final String name;
+  final String status;
+  final int temp;
+  final TextStyle style = TextStyle(fontSize: 24.0);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width,
+      child: Card(
+        elevation: 5.0,
+        color: Theme.of(context).colorScheme.surface,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                Text(
+                  name,
+                  style: style.copyWith(color: Theme.of(context).colorScheme.onSurface, fontSize: 48.0),
+                ),
+                Text(
+                  temp.toString()+"°F",
+                  style: style.copyWith(color: Theme.of(context).colorScheme.onSurface),
+                ),
+              ],
+            ),
+            Text(
+              temp.toString()+"°F",
+              style: style.copyWith(color: Theme.of(context).colorScheme.secondaryVariant, fontSize: 64.0),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
