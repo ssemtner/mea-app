@@ -1,13 +1,36 @@
 import 'package:flutter/material.dart';
 
-class KitchenTab extends StatefulWidget {
-  final _kitchenCards = <KitchenCard>[];
+import 'dbManager.dart';
 
+class KitchenTab extends StatefulWidget {
   @override
   KitchenTabState createState() => KitchenTabState();
 }
 
 class KitchenTabState extends State<KitchenTab> {
+  KitchenTabState() {
+    updateFromDB();
+    _manager.insert((KitchenCard(id: 2, name: 'aksdjf', temp: 100,).toMap()));
+  }
+
+  var _kitchenCards = <KitchenCard>[];
+  final _manager = DBManager.instance;
+
+  void updateFromDB() async {
+    _manager.insert(KitchenCard(id: 1, name: 'gjghj', temp: 99,).toMap());
+    final maps = await _manager.queryAllRows();
+
+    setState(() {
+      _kitchenCards = List.generate(maps.length, (i) {
+        return KitchenCard(
+          id: maps[i]['_id'],
+          name: maps[i]['name'],
+          temp: maps[i]['temp'],
+        );
+      });
+    });
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -16,10 +39,13 @@ class KitchenTabState extends State<KitchenTab> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
+          MaterialButton(
+            onPressed: updateFromDB,
+          ),
           new Flexible(
             child: new ListView.builder(
-              itemBuilder: (_, int index) => widget._kitchenCards[index],
-              itemCount: widget._kitchenCards.length,
+              itemBuilder: (_, int index) => _kitchenCards[index],
+              itemCount: _kitchenCards.length,
             ),
           ),
         ],
@@ -27,7 +53,6 @@ class KitchenTabState extends State<KitchenTab> {
     );
   }
 }
-
 
 class KitchenCard extends StatelessWidget {
   KitchenCard({this.id, this.name, this.status, this.temp});
@@ -39,8 +64,8 @@ class KitchenCard extends StatelessWidget {
 
   Map<String, dynamic> toMap() {
     return {
+      '_id': id,
       'name': name,
-      'status': status,
       'temp': temp,
     };
   }
@@ -48,6 +73,9 @@ class KitchenCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
       elevation: 5.0,
       color: Theme.of(context).colorScheme.surface,
       child: Container(
@@ -56,19 +84,9 @@ class KitchenCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: <Widget>[
-                Text(
-                  name,
-                  style: style.copyWith(color: Theme.of(context).colorScheme.onSurface, fontSize: 36.0),
-                ),
-                Text(
-                  status,
-                  style: style.copyWith(color: Theme.of(context).colorScheme.onSurface),
-                ),
-              ],
+            Text(
+              name,
+              style: style.copyWith(color: Theme.of(context).colorScheme.onSurface, fontSize: 36.0),
             ),
             Text(
               temp.toString()+"°F",
