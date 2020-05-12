@@ -9,15 +9,14 @@ class KitchenTab extends StatefulWidget {
 
 class KitchenTabState extends State<KitchenTab> {
   KitchenTabState() {
-    updateFromDB();
+    _updateFromDB();
     _manager.insert((KitchenCard(id: 2, name: 'aksdjf', temp: 100,).toMap()));
   }
 
   var _kitchenCards = <KitchenCard>[];
   final _manager = DBManager.instance;
 
-  void updateFromDB() async {
-    _manager.insert(KitchenCard(id: 1, name: 'gjghj', temp: 99,).toMap());
+  void _updateFromDB() async {
     final maps = await _manager.queryAllRows();
 
     setState(() {
@@ -26,9 +25,22 @@ class KitchenTabState extends State<KitchenTab> {
           id: maps[i]['_id'],
           name: maps[i]['name'],
           temp: maps[i]['temp'],
+          deleteAction: _removeFromDB,
         );
       });
     });
+  }
+
+  Future<bool> _addToDB(KitchenCard card) async {
+    await _manager.insert(card.toMap());
+    _updateFromDB();
+    return true;
+  }
+
+  Future<bool> _removeFromDB(KitchenCard card) async {
+    await _manager.delete(card.id);
+    _updateFromDB();
+    return true;
   }
   
   @override
@@ -40,7 +52,9 @@ class KitchenTabState extends State<KitchenTab> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           MaterialButton(
-            onPressed: updateFromDB,
+            onPressed: () {
+              _addToDB(KitchenCard(id: 1, name: 'thing', temp: 100));
+            },
           ),
           new Flexible(
             child: new ListView.builder(
@@ -54,45 +68,86 @@ class KitchenTabState extends State<KitchenTab> {
   }
 }
 
-class KitchenCard extends StatelessWidget {
-  KitchenCard({this.id, this.name, this.status, this.temp});
+class KitchenCard extends StatefulWidget {
+  KitchenCard({this.id, this.name, this.status, this.temp, this.deleteAction});
   final int id;
   final String name;
   final String status;
   final int temp;
-  final TextStyle style = TextStyle(fontSize: 24.0, fontWeight: FontWeight.w300);
+  final ValueChanged<KitchenCard> deleteAction;
 
   Map<String, dynamic> toMap() {
     return {
-      '_id': id,
-      'name': name,
-      'temp': temp,
+      '_id': this.id,
+      'name': this.name,
+      'temp': this.temp,
     };
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
+  _KitchenCardState createState() => _KitchenCardState();
+}
+
+class _KitchenCardState extends State<KitchenCard> {
+  final TextStyle style = TextStyle(fontSize: 24.0, fontWeight: FontWeight.w300);
+
+  var _tapPosition;
+
+  _showPopupMenu(BuildContext context) async {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject();
+
+    await showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+        _tapPosition & Size(40, 40),
+        Offset.zero & overlay.size
       ),
-      elevation: 5.0,
-      color: Theme.of(context).colorScheme.surface,
-      child: Container(
-        padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              name,
-              style: style.copyWith(color: Theme.of(context).colorScheme.onSurface, fontSize: 36.0),
-            ),
-            Text(
-              temp.toString()+"°F",
-              style: style.copyWith(color: Theme.of(context).colorScheme.secondaryVariant, fontSize: 64.0),
-            ),
-          ],
+      items: [
+        PopupMenuItem(
+          child: IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () {
+
+            }),
+        ),
+      ],
+      elevation: 10.0,
+    );
+  }
+
+  _storePosition(TapDownDetails details) {
+    _tapPosition = details.globalPosition;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _storePosition,
+      onLongPress: () {
+        _showPopupMenu(context);
+      },
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        elevation: 5.0,
+        color: Theme.of(context).colorScheme.surface,
+        child: Container(
+          padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                widget.name,
+                style: style.copyWith(color: Theme.of(context).colorScheme.onSurface, fontSize: 36.0),
+              ),
+              Text(
+                widget.temp.toString()+"°F",
+                style: style.copyWith(color: Theme.of(context).colorScheme.secondaryVariant, fontSize: 64.0),
+              ),
+            ],
+          ),
         ),
       ),
     );

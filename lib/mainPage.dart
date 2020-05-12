@@ -1,36 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:mea/Settings.dart';
 import 'package:mea/kitchen.dart';
+import 'package:mea/lights.dart';
+import 'package:mea/mea_icons.dart';
+import 'doors.dart';
+import 'mea_icons.dart';
 
 class MainPage extends StatefulWidget {
   MainPage({this.title});
 
   final String title;
 
+
   @override
-  createState() => _MainPageState();
+  _MainPageState createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
   final TextStyle style = TextStyle(fontSize: 24.0);
+  int _currentIndex = 0;
+
+  final List<Widget> _children = [
+    KitchenTab(),
+    LightsTab(),
+    DoorsTab(),
+    SettingsTab()
+  ];
+
+  void onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final _kitchen = SingleChildScrollView(
-      child: Center(
 
-      ),
-    );
-
-    final _lights = Column(
-      children: <Widget>[
-        Icon(Icons.lightbulb_outline),
-        RaisedButton(
-          color: Theme.of(context).colorScheme.secondary,
-          onPressed: () {Navigator.pushNamedAndRemoveUntil(context, '/landing', (_) => false);},
-          child: Text('RESET', style: style.copyWith(color: Theme.of(context).colorScheme.onSecondary))
-        )
-      ]
-    );
 
     final _doors = Container(
       color: Theme.of(context).colorScheme.background,
@@ -43,33 +48,36 @@ class _MainPageState extends State<MainPage> {
 
     final _settings = Icon(Icons.settings);
 
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          bottom: TabBar(
-            tabs: [
-              Tab(text: 'Kitchen'),
-              Tab(text: 'Lights'),
-              Tab(text: 'Doors'),
-              Tab(text: 'Settings'),
-            ],
+    return Scaffold(
+      body: Container(
+        color: Theme.of(context).colorScheme.background,
+        child: _children[_currentIndex],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        unselectedItemColor: Theme.of(context).colorScheme.primary,
+        selectedItemColor: Theme.of(context).colorScheme.primaryVariant,
+        currentIndex: _currentIndex,
+        onTap: onTabTapped,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.kitchen),
+            title: Text('Kitchen'),
           ),
-          title: Text('MEA'),
-        ),
-        body: Container(
-          color: Theme.of(context).colorScheme.background,
-          child: TabBarView(
-            children: [
-              KitchenTab(),
-              _lights,
-              _doors,
-              _settings,
-            ]
+          BottomNavigationBarItem(
+            icon: Icon(Icons.lightbulb_outline),
+            title: Text('Lights'),
           ),
-        ),
-      )
+          BottomNavigationBarItem(
+            icon: Icon(MeaIcons.door),
+            title: Text('Doors')
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            title: Text('Settings'),
+          ),
+        ],
+      ),
     );
   }
 }
