@@ -8,17 +8,25 @@ class KitchenTab extends StatefulWidget {
 }
 
 class KitchenTabState extends State<KitchenTab> {
-  KitchenTabState() {
+    KitchenTabState() {
     _updateFromDB();
-    _manager.insert((KitchenCard(id: 2, name: 'aksdjf', temp: 100,).toMap()));
   }
 
   var _kitchenCards = <KitchenCard>[];
-  final _manager = DBManager.instance;
+  final _db = DBManager(
+    tableName: 'kitchen',
+    c2name: 'name',
+    c2type: 'TEXT',
+    c3name: 'temp',
+    c3type: 'INTEGER'
+  );
 
   void _updateFromDB() async {
-    final maps = await _manager.queryAllRows();
-
+    final maps = await _db.queryAllRows();
+    _db.insert(KitchenCard(id: 1, name: 'Stove', temp: 700).toMap());
+    _db.insert(KitchenCard(id: 2, name: 'Microwave', temp: 49).toMap());
+    _db.insert(KitchenCard(id: 3, name: 'Oven', temp: 90).toMap());
+    _db.smartAdd(KitchenCard(id: 1, name: 'Stove', temp: 700).toMap());
     setState(() {
       _kitchenCards = List.generate(maps.length, (i) {
         return KitchenCard(
@@ -32,13 +40,13 @@ class KitchenTabState extends State<KitchenTab> {
   }
 
   Future<bool> _addToDB(KitchenCard card) async {
-    await _manager.insert(card.toMap());
+    await _db.insert(card.toMap());
     _updateFromDB();
     return true;
   }
 
   Future<bool> _removeFromDB(KitchenCard card) async {
-    await _manager.delete(card.id);
+    await _db.delete(card.id);
     _updateFromDB();
     return true;
   }
@@ -46,20 +54,17 @@ class KitchenTabState extends State<KitchenTab> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Theme.of(context).colorScheme.background,
-      padding: EdgeInsets.all(10.0),
+      color: Colors.white,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          MaterialButton(
-            onPressed: () {
-              _addToDB(KitchenCard(id: 1, name: 'thing', temp: 100));
-            },
-          ),
           new Flexible(
-            child: new ListView.builder(
-              itemBuilder: (_, int index) => _kitchenCards[index],
-              itemCount: _kitchenCards.length,
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: ListView.builder(
+                itemBuilder: (_, int index) => _kitchenCards[index],
+                itemCount: _kitchenCards.length,
+              ),
             ),
           ),
         ],
@@ -68,70 +73,32 @@ class KitchenTabState extends State<KitchenTab> {
   }
 }
 
-class KitchenCard extends StatefulWidget {
-  KitchenCard({this.id, this.name, this.status, this.temp, this.deleteAction});
+class KitchenCard extends StatelessWidget {
+  KitchenCard({this.id, this.name, this.temp, this.deleteAction});
   final int id;
   final String name;
-  final String status;
   final int temp;
   final ValueChanged<KitchenCard> deleteAction;
+  final TextStyle style = TextStyle(fontSize: 24.0, fontWeight: FontWeight.w300);
 
   Map<String, dynamic> toMap() {
     return {
-      '_id': this.id,
+      'id': this.id,
       'name': this.name,
       'temp': this.temp,
     };
   }
 
   @override
-  _KitchenCardState createState() => _KitchenCardState();
-}
-
-class _KitchenCardState extends State<KitchenCard> {
-  final TextStyle style = TextStyle(fontSize: 24.0, fontWeight: FontWeight.w300);
-
-  var _tapPosition;
-
-  _showPopupMenu(BuildContext context) async {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject();
-
-    await showMenu(
-      context: context,
-      position: RelativeRect.fromRect(
-        _tapPosition & Size(40, 40),
-        Offset.zero & overlay.size
-      ),
-      items: [
-        PopupMenuItem(
-          child: IconButton(
-            icon: Icon(Icons.delete),
-            onPressed: () {
-
-            }),
-        ),
-      ],
-      elevation: 10.0,
-    );
-  }
-
-  _storePosition(TapDownDetails details) {
-    _tapPosition = details.globalPosition;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _storePosition,
-      onLongPress: () {
-        _showPopupMenu(context);
-      },
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16.0),
       child: Card(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
+          borderRadius: BorderRadius.circular(8.0),
         ),
-        elevation: 5.0,
-        color: Theme.of(context).colorScheme.surface,
+        elevation: 0.1,
+        color: Color.fromRGBO(242, 242, 247, 15),
         child: Container(
           padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
           child: Row(
@@ -139,11 +106,11 @@ class _KitchenCardState extends State<KitchenCard> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Text(
-                widget.name,
-                style: style.copyWith(color: Theme.of(context).colorScheme.onSurface, fontSize: 36.0),
+                name,
+                style: style.copyWith(color: Theme.of(context).colorScheme.onSurface, fontSize: 10.0),
               ),
               Text(
-                widget.temp.toString()+"°F",
+                temp.toString()+"°F",
                 style: style.copyWith(color: Theme.of(context).colorScheme.secondaryVariant, fontSize: 64.0),
               ),
             ],

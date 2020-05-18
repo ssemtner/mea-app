@@ -5,17 +5,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DBManager {
-  static final _databaseName = "cards.db";
+  DBManager({this.tableName, this.c2name, this.c2type, this.c3name, this.c3type});
+  static final _databaseName = 'localData.db';
   static final _databaseVersion = 1;
-
-  static final table = 'kitchen';
-
-  static final columnId = '_id';
-  static final columnName = 'name';
-  static final columnTemp = 'temp';
-
-  DBManager._privateConstructor();
-  static final DBManager instance = DBManager._privateConstructor();
+  final tableName, c2name, c2type, c3name, c3type;
 
   static Database _database;
   Future<Database> get database async {
@@ -29,44 +22,45 @@ class DBManager {
     String path = join(documentsDirectory.path, _databaseName);
     return await openDatabase(path,
       version: _databaseVersion,
-      onCreate: _onCreate);
+      onCreate: _onCreate
+    );
   }
 
   Future _onCreate(Database db, int version) async {
-    await db.execute('''
-          CREATE TABLE $table (
-            $columnId INTEGER PRIMARY KEY,
-            $columnName TEXT NOT NULL,
-            $columnTemp INTEGER
-          )
-          ''');
+    await db.execute(
+      '''CREATE TABLE $tableName (
+            ID INTEGER PRIMARY KEY,
+            $c2name $c2type NOT NULL,
+            $c3name $c3type
+        )'''
+    );
   }
 
   Future<int> insert(Map<String, dynamic> row) async {
-    Database db = await instance.database;
-    return await db.insert(table, row);
+    return await _database.insert(tableName, row);
   }
 
   Future<List<Map<String, dynamic>>> queryAllRows() async {
-    Database db = await instance.database;
-    return await db.query(table);
-  }
-
-
-
-  Future<int> queryRowCount() async {
-    Database db = await instance.database;
-    return Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM $table'));
-  }
-
-  Future<int> update(Map<String, dynamic> row) async {
-    Database db = await instance.database;
-    int id = row[columnId];
-    return await db.update(table, row, where: '$columnId = ?', whereArgs: [id]);
+    Database db = await database;
+    return await db.query(tableName);
   }
 
   Future<int> delete(int id) async {
-    Database db = await instance.database;
-    return await db.delete(table, where: '$columnId = ?', whereArgs: [id]);
+    return await _database.delete(tableName, where: 'ID = ?', whereArgs: [id]);
+  }
+
+  Future<int> update(Map<String, dynamic> row) async {
+    int id = row[0];
+    return await _database.update(tableName, row, where: 'ID = ?', whereArgs: [id]);
+  }
+
+  Future<int> smartAdd(Map<String, dynamic> row) async {
+    final int id = row[0];
+    var queryResult = await _database.rawQuery('SELECT * FROM $tableName WHERE ID="$id"');
+    if (queryResult != null) {
+      return insert(row);
+    } else {
+      return update(row);
+    }
   }
 }

@@ -8,9 +8,7 @@ import 'mea_icons.dart';
 
 class MainPage extends StatefulWidget {
   MainPage({this.title});
-
   final String title;
-
 
   @override
   _MainPageState createState() => _MainPageState();
@@ -35,22 +33,9 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-
-
-    final _doors = Container(
-      color: Theme.of(context).colorScheme.background,
-      child: Center(
-        child: Column(
-
-        )
-      )
-    );
-
-    final _settings = Icon(Icons.settings);
-
     return Scaffold(
-      body: Container(
-        color: Theme.of(context).colorScheme.background,
+      body: ScrollConfiguration(
+        behavior: ScrollBehavior(),
         child: _children[_currentIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(
